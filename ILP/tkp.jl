@@ -3,7 +3,7 @@ Pkg.activate(@__DIR__)
 Pkg.instantiate()
 
 using JuMP
-using GLPK
+using HiGHS
 using Random
 
 file = ""       # Instances file name
@@ -25,6 +25,7 @@ end
 # Reads the instances and creates the price, demand and intervals arrays
 try
     println("Opening from $file...\n")
+    println(file)
     open(file) do f
         # First and second lines from the file are the size and max capacity respectively
         global n = parse(Int, readline(f))
@@ -33,10 +34,10 @@ try
         item_count = 0
 
         # TODO: create an array of int instead of floats
-        global price = zeros(n)
-        global demand = zeros(n)
-        global start = zeros(n)
-        global finish = zeros(n)
+        global price = zeros(Int, n)
+        global demand = zeros(Int, n)
+        global start = zeros(Int, n)
+        global finish = zeros(Int, n)
 
         # Parse throw the instances
         while (item_count < n)
@@ -61,23 +62,34 @@ catch e
     exit(1)
 end
 
+# Finds the max time
 max_time = maximum(finish)
 
-Random.seed!(seed)
+# Builds bid_t, a NxM boolean matrix 
+# N is the size of bids in the problem and M is the max time in the time set
+# bid_t[b, t] is 1 if a bid b is "active" in the time t
+# That is, t is in the interval [start(b), end(b)] of the bid b
+bid_t = zeros(Bool, n, max_time)
+for b in 1:n
+    for t in start[b]:finish[b]
+        bid_t[b, t] = 1
+    end
+end
 
+Random.seed!(seed)
 # Solver implementation
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 set_time_limit_sec(model, time_limit)
 # Binary variable representing if item i is in the solution
 @variable(model, x[1:n], Bin)
 # Objective function
 @objective(model, Max, sum(price[i]*x[i] for i in 1:n))
 
-# Constraints
+# Capacity constraints
 for t in 1:max_time
-    for i in 1:n
-        
-    end
+    @constraint(model, sum(demand[i]*x[i]*bid_t[i, t] for i in 1:n) <= capacity)
 end
 
 optimize!(model)
+@show objective_value(model)
+@show value.(x)
