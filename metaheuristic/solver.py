@@ -1,5 +1,6 @@
 import numpy as np
 import cProfile
+from timeit import default_timer as timer
 
 class Solver():
 
@@ -68,19 +69,20 @@ class Solver():
         # List of indexes ordered from descending price 
         top_prices = np.argsort(self.price)[::-1]
 
-        while True:
-            for i in top_prices:
-                # Jump bids with a demand higher than the max capacity
-                if self.demand[i] > self.capacity:
-                    continue
+        for i in top_prices:
+            # Jump bids with a demand higher than the max capacity
+            if self.demand[i] > self.capacity:
+                continue
 
-                # Builds the time_demand array for each bid
-                for t in range(self.start[i]-1, self.finish[i]):
-                    time_demand[t] += self.demand[i]
-                    if time_demand[t] > self.capacity:
-                        return solution
-                # If the contraints are met, adds the bid to the solution
-                solution[i] = 1
+            # Builds the time_demand array for each bid
+            for t in range(self.start[i]-1, self.finish[i]):
+                time_demand[t] += self.demand[i]
+                if time_demand[t] > self.capacity:
+                    return solution
+            # If the contraints are met, adds the bid to the solution
+            solution[i] = 1
+        
+        return solution
 
     """ The Neighborhood is defined by a flip of a bid in a solution 
         for every bid, remove the bid if its already in the current solution, add it otherwise"""
@@ -108,14 +110,16 @@ class Solver():
                 cost = self.evaluate(solution)
                 prev_cost = self.evaluate(s)
                 v = i%t
-
-                if (cost >= prev_cost) or (cost >= l[v]):
-                    s = solution
-                    l[v] = cost
-                    if cost > best_value:
-                        best_solution = solution
-                        best_value = cost
-                i += 1
+                
+                if cost > 0:
+                    i += 1
+                    if (cost >= prev_cost) or (cost >= l[v]):
+                        s = solution
+                        l[v] = cost
+                        if cost > best_value:
+                            best_solution = solution
+                            best_value = cost   
+                
             k += 1
         
         self.solution = best_solution
@@ -125,9 +129,20 @@ class Solver():
     def __str__(self) -> str:
         pass
     
-def main():
-    solver = Solver("U2")
-    solver.lahc(10, 10)
+def main(file, iterations):
+    start = timer()
+    solver = Solver(file)
+    solver.lahc(10, iterations)
+    end = timer()
+    return solver.cost, (end-start)
 
 if __name__ == "__main__":
-    cProfile.run('main()', sort='tottime')
+    n = 3
+    print(f"file, size, cost, time")
+    iterations = [i*5 for i in range(1,n+1)]
+    for i in iterations:
+        cost, time = main("U100", i)
+        print(f"U100, {i}, {cost}, {time}")
+        
+        
+    
