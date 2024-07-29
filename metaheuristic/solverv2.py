@@ -51,8 +51,7 @@ class Data():
 
             for _ in range(n):
                 line = f.readline()
-                bid = line.split(' ')
-                bid.pop()
+                bid = line.strip().split(' ')
                 bid = [int(i) for i in bid]
 
                 price.append(bid[0])
@@ -151,17 +150,19 @@ def main(file, iterations):
     start = timer()
     data = Data(file)
     solver = Solver(data)
+    initial = solver.solution.cost
     solver.lahc(10, iterations)
     end = timer()
-    return solver.solution.cost, (end-start)
+
+    print(f"{file}, {iterations}, {initial}, {solver.solution.cost}, {end-start}")
 
 if __name__ == "__main__":
-    n = 3
-    print(f"file, size, cost, time")
-    iterations = [i*5 for i in range(1,n+1)]
-    for i in iterations:
-        cost, time = main("U100", i)
-        print(f"U100, {i}, {cost}, {time}")
-        
-        
-    
+    files = ["U2", "U100", "I5", "I25", "I72", "I90", "I100", "HB"]
+    test = ["U2", "U100"]
+    n = 10
+    print(f"instance, iterations, initialSolution, bestSolution, time")
+    iterations = [i*30 for i in range(1,n+1)]
+    """for i in iterations:
+        for file in files:
+            main(file, i)"""
+    main("I72", 5)

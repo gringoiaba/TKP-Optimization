@@ -23,7 +23,7 @@ catch e
 end
 
 # Reads the instances and creates the price, demand and intervals arrays
-try
+
     println("Opening from $file...\n")
     println(file)
     open(file) do f
@@ -42,25 +42,24 @@ try
         # Parse throw the instances
         while (item_count < n)
             line = readline(f)
-            temp = split(line, " ") 
+            line = strip(line)
+            temp = split(line)
             # The last element from the split array is an empty string
-            pop!(temp)                  
             # Array of strings to array of ints
             item = [parse(Int, x) for x in temp]
 
+            
             # Fill the arrays
             price[item_count+1] = item[1]
             demand[item_count+1] = item[2]
             start[item_count+1] = item[3]
             finish[item_count+1] = item[4]
 
+
             item_count += 1
         end
     end
-catch e
-    println("ERROR: Error finding or reading the file.\n")
-    exit(1)
-end
+
 
 # Finds the max time
 max_time = maximum(finish)

@@ -1,6 +1,6 @@
 import numpy as np
-import cProfile
 from timeit import default_timer as timer
+from random import randint, seed
 
 class Solver():
 
@@ -18,6 +18,7 @@ class Solver():
 
     """ Reads the instance file and return its content """
     def read_file(self, file:str):
+        
         price = []
         demand = []
         start = []
@@ -29,8 +30,7 @@ class Solver():
 
             for _ in range(n):
                 line = f.readline()
-                bid = line.split(' ')
-                bid.pop()
+                bid = line.strip().split(' ')
                 bid = [int(i) for i in bid]
 
                 price.append(bid[0])
@@ -65,22 +65,16 @@ class Solver():
     def init(self):
 
         time_demand = [0]*self.max_time
-        solution = [0]*self.n
-        # List of indexes ordered from descending price 
-        top_prices = np.argsort(self.price)[::-1]
+        solution = [0]*self.n 
 
-        for i in top_prices:
-            # Jump bids with a demand higher than the max capacity
-            if self.demand[i] > self.capacity:
-                continue
-
-            # Builds the time_demand array for each bid
-            for t in range(self.start[i]-1, self.finish[i]):
-                time_demand[t] += self.demand[i]
-                if time_demand[t] > self.capacity:
-                    return solution
-            # If the contraints are met, adds the bid to the solution
-            solution[i] = 1
+        for _ in range(self.n):
+            i = randint(0, self.n-1)
+            if not solution[i]:
+                for t in range(self.start[i]-1, self.finish[i]):
+                    time_demand[t] += self.demand[i]
+                    if time_demand[t] > self.capacity:
+                        return solution
+                solution[i] = 1
         
         return solution
 
@@ -132,17 +126,21 @@ class Solver():
 def main(file, iterations):
     start = timer()
     solver = Solver(file)
+    initial = solver.cost
     solver.lahc(10, iterations)
     end = timer()
-    return solver.cost, (end-start)
+    print(f"{file}, {iterations}, {initial}, {solver.cost}, {end-start}")
 
 if __name__ == "__main__":
-    n = 3
-    print(f"file, size, cost, time")
-    iterations = [i*5 for i in range(1,n+1)]
-    for i in iterations:
-        cost, time = main("U100", i)
-        print(f"U100, {i}, {cost}, {time}")
-        
+    files = ["U2", "U100", "I5", "I25", "I72", "I90", "I100", "HB"]
+    seed = seed(0)
+    n = 10
+    print(f"instance, iterations, initialSolution, bestSolution, time")
+    iterations = [i*50 for i in range(1,n+1)]
+    """for i in iterations:
+        for file in files:
+            main(file, i)
+        """
+    main("U2", 5)
         
     
