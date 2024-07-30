@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 from timeit import default_timer as timer
 from random import randint, seed
 
@@ -18,7 +19,6 @@ class Solver():
 
     """ Reads the instance file and return its content """
     def read_file(self, file:str):
-        
         price = []
         demand = []
         start = []
@@ -43,7 +43,6 @@ class Solver():
     """ Calculates the cost function of a solution 
          if solution is not feasible returns a negative number """
     def evaluate(self, solution):
-
         total_price = np.dot(np.array(solution), self.price)
 
         # Array that stores the demand of bids from solution
@@ -61,13 +60,13 @@ class Solver():
         return total_price
     
     """ Creates an initial solution to the TKP 
-        bids with the highest price are added to the solution until it's unfeasible """
+        adds random bids to the solution until it's unfeasible """
     def init(self):
 
         time_demand = [0]*self.max_time
         solution = [0]*self.n 
 
-        for _ in range(self.n):
+        for j in range(self.n):
             i = randint(0, self.n-1)
             if not solution[i]:
                 for t in range(self.start[i]-1, self.finish[i]):
@@ -89,7 +88,8 @@ class Solver():
 
         return np.array(neighborhood)
     
-    def lahc(self, t, iterations):
+    """ LAHC meta-heuristic implementation """
+    def lahc(self, t, iterations, start):
         s = self.solution
         cost = self.cost
         l = [cost]*t
@@ -100,17 +100,22 @@ class Solver():
         k = 0
 
         while k < iterations:
+            # Searches in the neighborhood
             for solution in self.one_flip(s):
                 cost = self.evaluate(solution)
                 prev_cost = self.evaluate(s)
                 v = i%t
                 
+                # If the solution is feasible
                 if cost > 0:
                     i += 1
                     if (cost >= prev_cost) or (cost >= l[v]):
                         s = solution
                         l[v] = cost
                         if cost > best_value:
+                            time = timer()
+                            time = time - start
+                            print(f"time: {time:.2f},  cost: {cost},  solution: \n{solution}")
                             best_solution = solution
                             best_value = cost   
                 
@@ -119,28 +124,24 @@ class Solver():
         self.solution = best_solution
         self.cost = best_value
 
-
-    def __str__(self) -> str:
-        pass
     
-def main(file, iterations):
+def solve(file, iterations):
     start = timer()
     solver = Solver(file)
     initial = solver.cost
-    solver.lahc(10, iterations)
+    solver.lahc(100, iterations, start)
     end = timer()
-    print(f"{file}, {iterations}, {initial}, {solver.cost}, {end-start}")
+    print(f"Instance {file}\n Number of iterations: {iterations}\n Cost of initial solution: {initial}\n Cost of best solution {solver.cost}\n Elapsed time: {end-start}")
+    print(solver.solution)
 
 if __name__ == "__main__":
-    files = ["U2", "U100", "I5", "I25", "I72", "I90", "I100", "HB"]
-    seed = seed(0)
-    n = 10
-    print(f"instance, iterations, initialSolution, bestSolution, time")
-    iterations = [i*50 for i in range(1,n+1)]
-    """for i in iterations:
-        for file in files:
-            main(file, i)
-        """
-    main("U2", 5)
-        
-    
+    n = len(sys.argv)
+    print(n)
+    if n != 4:
+        print("ERROR: Invalid parameters.\nUsage: python solver.py file_name seed num_of_iterations\n")
+        exit(1)
+    file = sys.argv[1]
+    rng = int(sys.argv[2])
+    iterations = int(sys.argv[3])
+    seed(rng)
+    solve(file, iterations)

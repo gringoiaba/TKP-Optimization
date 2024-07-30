@@ -24,41 +24,41 @@ end
 
 # Reads the instances and creates the price, demand and intervals arrays
 
-    println("Opening from $file...\n")
-    println(file)
-    open(file) do f
-        # First and second lines from the file are the size and max capacity respectively
-        global n = parse(Int, readline(f))
-		global capacity = parse(Int, readline(f))
+println("Opening from $file...\n")
+println(file)
+open(file) do f
+    # First and second lines from the file are the size and max capacity respectively
+    global n = parse(Int, readline(f))
+    global capacity = parse(Int, readline(f))
+    
+    item_count = 0
+
+    # TODO: create an array of int instead of floats
+    global price = zeros(Int, n)
+    global demand = zeros(Int, n)
+    global start = zeros(Int, n)
+    global finish = zeros(Int, n)
+
+    # Parse throw the instances
+    while (item_count < n)
+        line = readline(f)
+        line = strip(line)
+        temp = split(line)
+        # The last element from the split array is an empty string
+        # Array of strings to array of ints
+        item = [parse(Int, x) for x in temp]
+
         
-        item_count = 0
-
-        # TODO: create an array of int instead of floats
-        global price = zeros(Int, n)
-        global demand = zeros(Int, n)
-        global start = zeros(Int, n)
-        global finish = zeros(Int, n)
-
-        # Parse throw the instances
-        while (item_count < n)
-            line = readline(f)
-            line = strip(line)
-            temp = split(line)
-            # The last element from the split array is an empty string
-            # Array of strings to array of ints
-            item = [parse(Int, x) for x in temp]
-
-            
-            # Fill the arrays
-            price[item_count+1] = item[1]
-            demand[item_count+1] = item[2]
-            start[item_count+1] = item[3]
-            finish[item_count+1] = item[4]
+        # Fill the arrays
+        price[item_count+1] = item[1]
+        demand[item_count+1] = item[2]
+        start[item_count+1] = item[3]
+        finish[item_count+1] = item[4]
 
 
-            item_count += 1
-        end
+        item_count += 1
     end
+end
 
 
 # Finds the max time
